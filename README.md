@@ -1,5 +1,8 @@
 # lbin
 
+lbin is a simple codebin implementation.
+It an be run both locally and on a server.
+
 ## Table of content
 
 - [Installation](#Installation)
