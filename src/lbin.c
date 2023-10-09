@@ -14,16 +14,15 @@ struct lbin_config lbin_config_defaults(void) {
   return cfg;
 }
 
-char *lbin_join(char *dst, const char *path_sep, const char *suffix) {
+char *lbin_join(char *dst, const char *path_sep, const char *suffix,
+                size_t len) {
   if (!dst || !suffix || !path_sep) {
     return NULL;
   }
 
-  size_t len = strlen(dst) + strlen(suffix) + strlen(path_sep) + 1;
-  char *new_dst = realloc(dst, len);
-  strcat(new_dst, path_sep);
-  strcat(new_dst, suffix);
-  return new_dst;
+  strncat(dst, path_sep, len);
+  strncat(dst, suffix, len);
+  return dst;
 }
 
 int lbin_main(struct lbin_config *cfg) {

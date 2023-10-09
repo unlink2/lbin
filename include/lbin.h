@@ -19,7 +19,8 @@ struct lbin_config {
 
 struct lbin_config lbin_config_defaults(void);
 
-char *lbin_join(char *dst, const char *path_sep, const char *suffix);
+char *lbin_join(char *dst, const char *path_sep, const char *suffix,
+                size_t len);
 
 int lbin_main(struct lbin_config *cfg);
 
