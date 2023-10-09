@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define LBIN_STDFILE "-"
+
 struct lbin_config {
   bool verbose;
 
@@ -29,6 +31,9 @@ struct lbin_ctx {
 struct lbin_config lbin_config_defaults(void);
 
 struct lbin_ctx lbin_ctx_init(void);
+
+FILE *lbin_fopen(const char *path, const char *mode, FILE * or);
+const char *lbin_getenv_or(const char *env, const char *or);
 
 char *lbin_join(char *dst, const char *path_sep, const char *suffix,
                 size_t len);
