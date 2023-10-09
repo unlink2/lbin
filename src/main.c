@@ -14,7 +14,6 @@ struct arg_end *end = NULL;
 #define lbin_argtable                                                          \
   { help, version, verb, end, }
 
-
 void lbin_args_free(void) {
   void *argtable[] = lbin_argtable;
   arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
@@ -60,21 +59,18 @@ void lbin_args_parse(int argc, char **argv) {
     exitcode = 1;
     goto exit;
   }
-  
+
   return;
 exit:
   lbin_args_free();
   exit(exitcode); // NOLINT
 }
 
-
-
 int main(int argc, char **argv) {
   lbin_args_parse(argc, argv);
-  
-  // map args to cfg here 
-  struct lbin_config cfg;
-  memset(&cfg, 0, sizeof(cfg));
+
+  // map args to cfg here
+  struct lbin_config cfg = lbin_config_defaults();
 
   cfg.verbose = verb->count > 0;
 
