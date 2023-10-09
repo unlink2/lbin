@@ -17,7 +17,18 @@ struct lbin_config {
   bool put_headers;
 };
 
+enum lbin_status {
+  LBIN_OK,
+  LBIN_NOT_FOUND,
+};
+
+struct lbin_ctx {
+  enum lbin_status status;
+};
+
 struct lbin_config lbin_config_defaults(void);
+
+struct lbin_ctx lbin_ctx_init(void);
 
 char *lbin_join(char *dst, const char *path_sep, const char *suffix,
                 size_t len);
