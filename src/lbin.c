@@ -8,10 +8,10 @@ struct lbin_config lbin_config_defaults(void) {
   struct lbin_config cfg;
   memset(&cfg, 0, sizeof(cfg));
 
-  char tmpnam_buf[TMP_MAX];
+  char tmpnam_buf[LBIN_TMP_MAX];
 
-  cfg.base_path_len = PATH_MAX;
-  cfg.file_path_len = PATH_MAX;
+  cfg.base_path_len = LBIN_PATH_MAX;
+  cfg.file_path_len = LBIN_PATH_MAX;
 
   cfg.put_headers = !getenv(LBIN_ENV_NO_HEADERS);
   cfg.echo = getenv(LBIN_ENV_ECHO) == NULL;
@@ -22,10 +22,10 @@ struct lbin_config lbin_config_defaults(void) {
   strncpy(cfg.base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""),
           cfg.base_path_len);
 
-  strncpy(cfg.file_path,
-          lbin_getenv_or(LBIN_ENV_FILE_PATH, lbin_tmpnam(tmpnam_buf, TMP_MAX)),
-          cfg.file_path_len);
-
+  strncpy(
+      cfg.file_path,
+      lbin_getenv_or(LBIN_ENV_FILE_PATH, lbin_tmpnam(tmpnam_buf, LBIN_TMP_MAX)),
+      cfg.file_path_len);
   return cfg;
 }
 
@@ -35,8 +35,23 @@ struct lbin_ctx lbin_ctx_init(void) {
   return ctx;
 }
 
+// FIXME: do we need a better rand function
+int lbin_rand(void) {
+  return rand(); // NOLINT
+}
+
 const char *lbin_tmpnam(char *dst, size_t len) {
-  tmpnam(dst);
+  static const char valid_chars[] = {"0123456789abcdefghijklmnopqrstuvwxyz"};
+  static const size_t valid_chars_len = sizeof(valid_chars);
+
+  memset(dst, 0, len);
+  for (size_t i = 0; i < len; i++) {
+
+    dst[i] = valid_chars[(lbin_rand() % (valid_chars_len - 1))];
+  }
+
+  dst[len - 1] = '\0';
+
   return dst;
 }
 

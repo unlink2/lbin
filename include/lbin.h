@@ -7,6 +7,8 @@
 #include "platform.h"
 
 #define LBIN_STDFILE "-"
+#define LBIN_TMP_MAX 16
+#define LBIN_PATH_MAX PATH_MAX
 
 struct lbin_config {
   bool verbose;
@@ -15,10 +17,10 @@ struct lbin_config {
   FILE *out;
 
   size_t base_path_len;
-  char base_path[PATH_MAX];
+  char base_path[LBIN_PATH_MAX];
 
   size_t file_path_len;
-  char file_path[PATH_MAX];
+  char file_path[LBIN_PATH_MAX];
 
   // set to true to echo output back to stdout
   // if out is not stdout
@@ -42,10 +44,15 @@ struct lbin_ctx lbin_ctx_init(void);
 FILE *lbin_fopen(const char *path, const char *mode, FILE * or);
 const char *lbin_getenv_or(const char *env, const char * or);
 
+// creates a random string
+// of the following pattern:
+// a-z0-9*
 const char *lbin_tmpnam(char *dst, size_t len);
 
 char *lbin_join(char *dst, const char *path_sep, const char *suffix,
                 size_t len);
+
+int lbin_rand(void);
 
 int lbin_main(struct lbin_config *cfg);
 
