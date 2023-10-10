@@ -1,6 +1,5 @@
 #include "lbin.h"
 #include "env.h"
-#include "platform.h"
 #include <stdlib.h>
 #include <string.h>
 

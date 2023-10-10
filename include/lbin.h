@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "platform.h"
+#include "env.h"
 
 #define LBIN_STDFILE "-"
 #define LBIN_TMP_MAX 16
