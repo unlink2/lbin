@@ -131,6 +131,9 @@ void lbin_headers(FILE *f, struct lbin_ctx *ctx) {
 }
 
 int lbin_main(struct lbin_config *cfg) {
+  if (lbin_srand() == -1) {
+    return -1;
+  }
   if (lbin_pledge() == -1) {
     fprintf(stderr, "Pledge failed!\n");
     return -1;

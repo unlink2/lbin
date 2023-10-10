@@ -1,6 +1,8 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #ifdef __OpenBSD__
@@ -18,8 +20,12 @@ int lbin_pledge(void) { return 0; }
 #include <unistd.h>
 #include <fcntl.h>
 
-void lbin_srand(void) {
+int lbin_srand(void) {
   int urand = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+  if (urand == -1) {
+    fprintf(stderr, "%s\n", strerror(errno));
+    return -1;
+  }
 
   unsigned int rand = 0;
   read(urand, &rand, sizeof(unsigned int));
@@ -27,6 +33,8 @@ void lbin_srand(void) {
   srand(rand);
 
   close(urand);
+
+  return 0;
 }
 
 #else

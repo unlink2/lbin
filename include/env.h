@@ -31,6 +31,6 @@
 
 int lbin_pledge(void);
 
-void lbin_srand(void);
+int lbin_srand(void);
 
 #endif

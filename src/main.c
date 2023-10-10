@@ -67,7 +67,6 @@ exit:
 }
 
 int main(int argc, char **argv) {
-  lbin_srand();
   lbin_args_parse(argc, argv);
 
   // map args to cfg here
