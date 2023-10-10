@@ -120,6 +120,9 @@ void lbin_status_header(FILE *f, enum lbin_status s) {
   case LBIN_NOT_FOUND:
     fputs("404 Not found", f);
     break;
+  case LBIN_BAD_REQUEST:
+    fputs("400 Bad Request", f);
+    break;
   }
 }
 
@@ -136,12 +139,16 @@ int lbin_main(struct lbin_config *cfg) {
 
   struct lbin_ctx ctx = lbin_ctx_init();
 
-  if (cfg->check_file_name) {
+  if (cfg->check_file_name &&
+      !lbin_check_filename(cfg->file_path, cfg->file_path_len,
+                           cfg->valid_filename_chars,
+                           cfg->valid_filename_chars_len)) {
+    ctx.status = LBIN_BAD_REQUEST;
   }
 
   if (cfg->put_headers) {
     lbin_headers(cfg->out, &ctx);
   }
 
-  return 0;
+  return ctx.status;
 }
