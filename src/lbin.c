@@ -8,11 +8,23 @@ struct lbin_config lbin_config_defaults(void) {
   struct lbin_config cfg;
   memset(&cfg, 0, sizeof(cfg));
 
+  char tmpnam_buf[TMP_MAX];
+
+  cfg.base_path_len = PATH_MAX;
+  cfg.file_path_len = PATH_MAX;
+
   cfg.put_headers = !getenv(LBIN_ENV_NO_HEADERS);
   cfg.echo = getenv(LBIN_ENV_ECHO) == NULL;
   cfg.in = lbin_fopen(lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE), "re", stdin);
   cfg.out =
       lbin_fopen(lbin_getenv_or(LBIN_ENV_OUT, LBIN_STDFILE), "we", stdout);
+
+  strncpy(cfg.base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""),
+          cfg.base_path_len);
+
+  strncpy(cfg.file_path,
+          lbin_getenv_or(LBIN_ENV_FILE_PATH, lbin_tmpnam(tmpnam_buf, TMP_MAX)),
+          cfg.file_path_len);
 
   return cfg;
 }
@@ -21,6 +33,11 @@ struct lbin_ctx lbin_ctx_init(void) {
   struct lbin_ctx ctx;
   memset(&ctx, 0, sizeof(ctx));
   return ctx;
+}
+
+const char *lbin_tmpnam(char *dst, size_t len) {
+  tmpnam(dst);
+  return dst;
 }
 
 char *lbin_join(char *dst, const char *path_sep, const char *suffix,
