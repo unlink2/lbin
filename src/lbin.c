@@ -67,7 +67,7 @@ const char *lbin_tmpnam(char *dst, size_t len, const char *valid_chars,
 
 bool lbin_check_filename(const char *filename, size_t len,
                          const char *valid_chars, size_t valid_chars_len) {
-  for (size_t fi = 0; fi < len; fi++) {
+  for (size_t fi = 0; fi < len && filename[fi]; fi++) {
     bool any = false;
     for (size_t vi = 0; vi < valid_chars_len; vi++) {
       if (filename[fi] == valid_chars[vi]) {
