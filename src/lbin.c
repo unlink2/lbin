@@ -46,7 +46,7 @@ struct lbin_ctx lbin_ctx_init(void) {
   return ctx;
 }
 
-// FIXME: do we need a better rand function
+// FIXME: do we need a better rand function?
 int lbin_rand(void) {
   return rand(); // NOLINT
 }
@@ -146,6 +146,11 @@ int lbin_main(struct lbin_config *cfg) {
                            cfg->valid_filename_chars,
                            cfg->valid_filename_chars_len)) {
     ctx.status = LBIN_BAD_REQUEST;
+  }
+
+  if (cfg->verbose) {
+    fprintf(stderr, "Basepath: %s, filename: %s\n", cfg->base_path,
+            cfg->file_path);
   }
 
   if (cfg->put_headers) {

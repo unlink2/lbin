@@ -1,4 +1,8 @@
 #!/bin/sh
 
-premake5 gmake && make && ./bin/Debug/lbin "$@"
+BASEPATH="/tmp/lbin"
+
+mkdir -p "$BASEPATH"
+
+premake5 gmake && make && LBIN_BASEPATH="$BASEPATH" ./bin/Debug/lbin "$@"
 
