@@ -4,16 +4,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char *LBIN_VALID_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz";
+
 struct lbin_config lbin_config_defaults(void) {
+  size_t valid_chars_len = strlen(LBIN_VALID_CHARS);
+
   struct lbin_config cfg;
   memset(&cfg, 0, sizeof(cfg));
 
   char tmpnam_buf[LBIN_TMP_MAX];
 
+  cfg.valid_filename_chars = LBIN_VALID_CHARS;
+  cfg.valid_filename_chars_len = valid_chars_len;
+
   cfg.base_path_len = LBIN_PATH_MAX;
   cfg.file_path_len = LBIN_PATH_MAX;
 
   cfg.put_headers = !getenv(LBIN_ENV_NO_HEADERS);
+  cfg.check_file_name = !getenv(LBIN_ENV_NO_CHK_FILENAME);
+
   cfg.echo = getenv(LBIN_ENV_ECHO) == NULL;
   cfg.in = lbin_fopen(lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE), "re", stdin);
   cfg.out =
@@ -22,10 +31,13 @@ struct lbin_config lbin_config_defaults(void) {
   strncpy(cfg.base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""),
           cfg.base_path_len);
 
-  strncpy(
-      cfg.file_path,
-      lbin_getenv_or(LBIN_ENV_FILE_PATH, lbin_tmpnam(tmpnam_buf, LBIN_TMP_MAX)),
-      cfg.file_path_len);
+  strncpy(cfg.file_path,
+          lbin_getenv_or(LBIN_ENV_FILE_PATH,
+                         lbin_tmpnam(tmpnam_buf, LBIN_TMP_MAX,
+                                     cfg.valid_filename_chars,
+                                     cfg.valid_filename_chars_len)),
+          cfg.file_path_len);
+
   return cfg;
 }
 
@@ -40,9 +52,8 @@ int lbin_rand(void) {
   return rand(); // NOLINT
 }
 
-const char *lbin_tmpnam(char *dst, size_t len) {
-  static const char valid_chars[] = {"0123456789abcdefghijklmnopqrstuvwxyz"};
-  static const size_t valid_chars_len = sizeof(valid_chars);
+const char *lbin_tmpnam(char *dst, size_t len, const char *valid_chars,
+                        const size_t valid_chars_len) {
 
   memset(dst, 0, len);
   for (size_t i = 0; i < len; i++) {
@@ -53,6 +64,24 @@ const char *lbin_tmpnam(char *dst, size_t len) {
   dst[len - 1] = '\0';
 
   return dst;
+}
+
+bool lbin_check_filename(const char *filename, size_t len,
+                         const char *valid_chars, size_t valid_chars_len) {
+  for (size_t fi = 0; fi < len; fi++) {
+    bool any = false;
+    for (size_t vi = 0; vi < valid_chars_len; vi++) {
+      if (filename[fi] == valid_chars[vi]) {
+        any = true;
+        break;
+      }
+    }
+
+    if (!any) {
+      return false;
+    }
+  }
+  return true;
 }
 
 char *lbin_join(char *dst, const char *path_sep, const char *suffix,
@@ -106,6 +135,9 @@ int lbin_main(struct lbin_config *cfg) {
   }
 
   struct lbin_ctx ctx = lbin_ctx_init();
+
+  if (cfg->check_file_name) {
+  }
 
   if (cfg->put_headers) {
     lbin_headers(cfg->out, &ctx);
