@@ -13,16 +13,11 @@
 extern const char *LBIN_VALID_CHARS;
 
 struct lbin_config {
+  int ok;
   bool verbose;
 
-  FILE *in;
-  FILE *out;
-
-  size_t base_path_len;
-  char base_path[LBIN_PATH_MAX];
-
-  size_t file_path_len;
-  char file_path[LBIN_PATH_MAX];
+  char out_path[LBIN_PATH_MAX];
+  char in_path[LBIN_PATH_MAX];
 
   const char *valid_filename_chars;
   size_t valid_filename_chars_len;
@@ -65,6 +60,10 @@ char *lbin_join(char *dst, const char *path_sep, const char *suffix,
                 size_t len);
 
 int lbin_rand(void);
+
+// pipes all data from dst to src file
+// optioanlly can echo to stdout if dst is not stdout
+int lbin_pipe(FILE *dst, FILE *src, bool echo);
 
 int lbin_main(struct lbin_config *cfg);
 

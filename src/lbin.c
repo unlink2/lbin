@@ -16,26 +16,32 @@ struct lbin_config lbin_config_defaults(void) {
   cfg.valid_filename_chars = LBIN_VALID_CHARS;
   cfg.valid_filename_chars_len = valid_chars_len;
 
-  cfg.base_path_len = LBIN_PATH_MAX;
-  cfg.file_path_len = LBIN_PATH_MAX;
-
   cfg.put_headers = !getenv(LBIN_ENV_NO_HEADERS);
   cfg.check_file_name = !getenv(LBIN_ENV_NO_CHK_FILENAME);
 
   cfg.echo = getenv(LBIN_ENV_ECHO) == NULL;
-  cfg.in = lbin_fopen(lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE), "re", stdin);
-  cfg.out =
-      lbin_fopen(lbin_getenv_or(LBIN_ENV_OUT, LBIN_STDFILE), "we", stdout);
 
-  strncpy(cfg.base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""),
-          cfg.base_path_len);
+  strncpy(cfg.out_path, lbin_getenv_or(LBIN_ENV_OUT, LBIN_STDFILE),
+          LBIN_PATH_MAX);
 
-  strncpy(cfg.file_path,
+  char base_path[LBIN_PATH_MAX];
+  strncpy(base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""), LBIN_PATH_MAX);
+
+  char file_path[LBIN_PATH_MAX];
+  strncpy(file_path,
           lbin_getenv_or(LBIN_ENV_FILE_PATH,
                          lbin_tmpnam(tmpnam_buf, LBIN_TMP_MAX,
                                      cfg.valid_filename_chars,
                                      cfg.valid_filename_chars_len)),
-          cfg.file_path_len);
+          LBIN_PATH_MAX);
+
+  // verify input data in cfg
+
+  if (cfg.check_file_name &&
+      !lbin_check_filename(file_path, LBIN_PATH_MAX, cfg.valid_filename_chars,
+                           cfg.valid_filename_chars_len)) {
+    cfg.ok = -1;
+  }
 
   return cfg;
 }
@@ -130,6 +136,23 @@ void lbin_headers(FILE *f, struct lbin_ctx *ctx) {
   fprintf(f, "\n");
 }
 
+int lbin_pipe(FILE *dst, FILE *src, bool echo) {
+  const size_t buf_len = 4096;
+  char buf[buf_len];
+  memset(buf, 0, buf_len);
+
+  size_t read = 0;
+  while ((read = fread(buf, 1, buf_len, src))) {
+    fwrite(buf, 1, read, dst);
+
+    if (echo && dst != stdout) {
+      fwrite(buf, 1, read, stdout);
+    }
+  }
+
+  return 0;
+}
+
 int lbin_main(struct lbin_config *cfg) {
   if (lbin_srand() == -1) {
     return -1;
@@ -141,20 +164,28 @@ int lbin_main(struct lbin_config *cfg) {
 
   struct lbin_ctx ctx = lbin_ctx_init();
 
-  if (cfg->check_file_name &&
-      !lbin_check_filename(cfg->file_path, cfg->file_path_len,
-                           cfg->valid_filename_chars,
-                           cfg->valid_filename_chars_len)) {
+  if (cfg->ok == -1) {
     ctx.status = LBIN_BAD_REQUEST;
   }
 
   if (cfg->verbose) {
-    fprintf(stderr, "Basepath: %s, filename: %s\n", cfg->base_path,
-            cfg->file_path);
+    fprintf(stderr, "int: %s out: %s\n", cfg->in_path, cfg->out_path);
   }
 
+  FILE *out = lbin_fopen(cfg->out_path, "we", stdout);
+
   if (cfg->put_headers) {
-    lbin_headers(cfg->out, &ctx);
+    lbin_headers(out, &ctx);
+  }
+
+  FILE *in = lbin_fopen(cfg->in_path, "re", stdin);
+
+  if (in && in != stdin) {
+    fclose(in);
+  }
+
+  if (out && out != stdout) {
+    fclose(out);
   }
 
   return ctx.status;
