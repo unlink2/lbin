@@ -30,7 +30,6 @@ int lbin_srand(void) {
   unsigned int r = 0;
   read(urand, &r, sizeof(unsigned int));
   assert(r);
-  fprintf(stderr, "%d\n", r);
   srand(r);
 
   close(urand);
