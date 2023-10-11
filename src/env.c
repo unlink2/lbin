@@ -27,10 +27,11 @@ int lbin_srand(void) {
     return -1;
   }
 
-  unsigned int rand = 0;
-  read(urand, &rand, sizeof(unsigned int));
-  assert(rand);
-  srand(rand);
+  unsigned int r = 0;
+  read(urand, &r, sizeof(unsigned int));
+  assert(r);
+  fprintf(stderr, "%d\n", r);
+  srand(r);
 
   close(urand);
 

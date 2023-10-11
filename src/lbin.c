@@ -13,6 +13,10 @@ struct lbin_config lbin_config_defaults(void) {
 
   char tmpnam_buf[LBIN_TMP_MAX];
 
+  memset(cfg.out_path, 0, LBIN_PATH_MAX);
+  memset(cfg.in_path, 0, LBIN_PATH_MAX);
+  memset(cfg.base_path, 0, LBIN_PATH_MAX);
+
   cfg.valid_filename_chars = LBIN_VALID_CHARS;
   cfg.valid_filename_chars_len = valid_chars_len;
 
@@ -21,24 +25,22 @@ struct lbin_config lbin_config_defaults(void) {
 
   cfg.echo = getenv(LBIN_ENV_ECHO) == NULL;
 
-  strncpy(cfg.out_path, lbin_getenv_or(LBIN_ENV_OUT, LBIN_STDFILE),
+  strncpy(cfg.in_path, lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE),
           LBIN_PATH_MAX);
 
-  char base_path[LBIN_PATH_MAX];
-  strncpy(base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""), LBIN_PATH_MAX);
+  strncpy(cfg.base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""), LBIN_PATH_MAX);
 
-  char file_path[LBIN_PATH_MAX];
-  strncpy(file_path,
-          lbin_getenv_or(LBIN_ENV_FILE_PATH,
-                         lbin_tmpnam(tmpnam_buf, LBIN_TMP_MAX,
-                                     cfg.valid_filename_chars,
-                                     cfg.valid_filename_chars_len)),
-          LBIN_PATH_MAX);
+  strncpy(
+      cfg.out_path,
+      lbin_getenv_or(LBIN_ENV_OUT, lbin_tmpnam(tmpnam_buf, LBIN_TMP_MAX,
+                                               cfg.valid_filename_chars,
+                                               cfg.valid_filename_chars_len)),
+      LBIN_PATH_MAX);
 
   // verify input data in cfg
 
   if (cfg.check_file_name &&
-      !lbin_check_filename(file_path, LBIN_PATH_MAX, cfg.valid_filename_chars,
+      !lbin_check_filename(cfg.in_path, LBIN_PATH_MAX, cfg.valid_filename_chars,
                            cfg.valid_filename_chars_len)) {
     cfg.ok = -1;
   }
@@ -46,10 +48,24 @@ struct lbin_config lbin_config_defaults(void) {
   return cfg;
 }
 
-struct lbin_ctx lbin_ctx_init(void) {
+struct lbin_ctx lbin_ctx_init(struct lbin_config *cfg) {
   struct lbin_ctx ctx;
   memset(&ctx, 0, sizeof(ctx));
+
+  ctx.in = lbin_fopen(cfg->base_path, cfg->in_path, "re", stdin);
+  ctx.out = lbin_fopen(cfg->base_path, cfg->out_path, "we", stdout);
+
   return ctx;
+}
+
+void lbin_ctx_free(struct lbin_ctx *ctx) {
+  if (ctx->in && ctx->in != stdin) {
+    fclose(ctx->in);
+  }
+
+  if (ctx->out && ctx->out != stdout) {
+    fclose(ctx->out);
+  }
 }
 
 // FIXME: do we need a better rand function?
@@ -59,7 +75,6 @@ int lbin_rand(void) {
 
 const char *lbin_tmpnam(char *dst, size_t len, const char *valid_chars,
                         const size_t valid_chars_len) {
-
   memset(dst, 0, len);
   for (size_t i = 0; i < len; i++) {
 
@@ -89,23 +104,32 @@ bool lbin_check_filename(const char *filename, size_t len,
   return true;
 }
 
-char *lbin_join(char *dst, const char *path_sep, const char *suffix,
-                size_t len) {
+char *lbin_join(char *dst, char path_sep, const char *suffix, size_t len) {
   if (!dst || !suffix || !path_sep) {
     return NULL;
   }
 
-  strncat(dst, path_sep, len);
+  size_t dst_len = strnlen(dst, len);
+  if (dst_len > 0 && dst[dst_len - 1] != path_sep) {
+    const char path_sep_str[] = {path_sep, '\0'};
+    strncat(dst, path_sep_str, len);
+  }
   strncat(dst, suffix, len);
   return dst;
 }
 
-FILE *lbin_fopen(const char *path, const char *mode, FILE * or) {
+FILE *lbin_fopen(const char *base, const char *path, const char *mode,
+                 FILE * or) {
   if (strncmp(path, LBIN_STDFILE, strlen(path)) == 0) {
     return or ;
   }
 
-  return fopen(path, mode);
+  char path_buf[LBIN_PATH_MAX];
+  memset(path_buf, 0, LBIN_PATH_MAX);
+  lbin_join(path_buf, LBIN_PATH_SEPARATOR, base, LBIN_PATH_MAX);
+  lbin_join(path_buf, LBIN_PATH_SEPARATOR, path, LBIN_PATH_MAX);
+
+  return fopen(path_buf, mode);
 }
 
 const char *lbin_getenv_or(const char *env, const char * or) {
@@ -153,40 +177,28 @@ int lbin_pipe(FILE *dst, FILE *src, bool echo) {
   return 0;
 }
 
-int lbin_main(struct lbin_config *cfg) {
-  if (lbin_srand() == -1) {
-    return -1;
-  }
+int lbin_main(struct lbin_config *cfg) { 
   if (lbin_pledge() == -1) {
     fprintf(stderr, "Pledge failed!\n");
     return -1;
   }
 
-  struct lbin_ctx ctx = lbin_ctx_init();
+  struct lbin_ctx ctx = lbin_ctx_init(cfg);
 
   if (cfg->ok == -1) {
     ctx.status = LBIN_BAD_REQUEST;
   }
 
   if (cfg->verbose) {
-    fprintf(stderr, "int: %s out: %s\n", cfg->in_path, cfg->out_path);
+    fprintf(stderr, "base path: '%s'; in: '%s'; out: '%s';\n", cfg->base_path,
+            cfg->in_path, cfg->out_path);
   }
-
-  FILE *out = lbin_fopen(cfg->out_path, "we", stdout);
 
   if (cfg->put_headers) {
-    lbin_headers(out, &ctx);
+    lbin_headers(ctx.out, &ctx);
   }
 
-  FILE *in = lbin_fopen(cfg->in_path, "re", stdin);
-
-  if (in && in != stdin) {
-    fclose(in);
-  }
-
-  if (out && out != stdout) {
-    fclose(out);
-  }
-
-  return ctx.status;
+  enum lbin_status status = ctx.status;
+  lbin_ctx_free(&ctx);
+  return status;
 }

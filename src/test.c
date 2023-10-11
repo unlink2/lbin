@@ -10,11 +10,27 @@
 void test_lbin_join(void **state) {
   const size_t len = 256;
   char dst[len];
-  memset(dst, 0, len);
-  strncat(dst, "prefix", len);
+  {
+    memset(dst, 0, len);
+    strncat(dst, "prefix", len);
 
-  const char *res = lbin_join(dst, "/", "suffix", len);
-  assert_string_equal("prefix/suffix", res);
+    const char *res = lbin_join(dst, '/', "suffix", len);
+    assert_string_equal("prefix/suffix", res);
+  }
+  {
+    memset(dst, 0, len);
+    strncat(dst, "prefix/", len);
+
+    const char *res = lbin_join(dst, '/', "suffix", len);
+    assert_string_equal("prefix/suffix", res);
+  }
+  {
+    memset(dst, 0, len);
+    strncat(dst, "prefix/", len);
+
+    const char *res = lbin_join(dst, '/', "/suffix", len);
+    assert_string_equal("prefix//suffix", res);
+  }
 }
 
 void test_valid_filename(void **state) {
