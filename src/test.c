@@ -36,6 +36,7 @@ void test_lbin_join(void **state) {
 void test_valid_filename(void **state) {
   size_t valid_len = strlen(LBIN_VALID_CHARS);
   assert_true(lbin_check_filename("test123", 7, LBIN_VALID_CHARS, valid_len));
+  assert_true(lbin_check_filename("-", 7, LBIN_VALID_CHARS, valid_len));
 
   assert_false(lbin_check_filename("..st123", 7, LBIN_VALID_CHARS, valid_len));
   assert_false(lbin_check_filename("t..t123", 7, LBIN_VALID_CHARS, valid_len));

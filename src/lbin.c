@@ -40,8 +40,12 @@ struct lbin_config lbin_config_defaults(void) {
   // verify input data in cfg
 
   if (cfg.check_file_name &&
-      !lbin_check_filename(cfg.in_path, LBIN_PATH_MAX, cfg.valid_filename_chars,
-                           cfg.valid_filename_chars_len)) {
+      (!lbin_check_filename(cfg.in_path, LBIN_PATH_MAX,
+                            cfg.valid_filename_chars,
+                            cfg.valid_filename_chars_len) ||
+       !lbin_check_filename(cfg.out_path, LBIN_PATH_MAX,
+                            cfg.valid_filename_chars,
+                            cfg.valid_filename_chars_len))) {
     cfg.ok = -1;
   }
 
@@ -88,6 +92,10 @@ const char *lbin_tmpnam(char *dst, size_t len, const char *valid_chars,
 
 bool lbin_check_filename(const char *filename, size_t len,
                          const char *valid_chars, size_t valid_chars_len) {
+  if (strncmp(filename, LBIN_STDFILE, len) == 0) {
+    return true;
+  }
+
   for (size_t fi = 0; fi < len && filename[fi]; fi++) {
     bool any = false;
     for (size_t vi = 0; vi < valid_chars_len; vi++) {
@@ -177,7 +185,7 @@ int lbin_pipe(FILE *dst, FILE *src, bool echo) {
   return 0;
 }
 
-int lbin_main(struct lbin_config *cfg) { 
+int lbin_main(struct lbin_config *cfg) {
   if (lbin_pledge() == -1) {
     fprintf(stderr, "Pledge failed!\n");
     return -1;
