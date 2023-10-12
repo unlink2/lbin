@@ -39,7 +39,11 @@ enum lbin_status {
 
 struct lbin_ctx {
   enum lbin_status status;
+
+  // input file
   FILE *in;
+
+  // out is the target file
   FILE *out;
 };
 
@@ -62,8 +66,7 @@ const char *lbin_getenv_or(const char *env, const char * or);
 const char *lbin_tmpnam(char *dst, size_t len, const char *valid_chars,
                         const size_t valid_chars_len);
 
-char *lbin_join(char *dst, char path_sep, const char *suffix,
-                size_t len);
+char *lbin_join(char *dst, char path_sep, const char *suffix, size_t len);
 
 int lbin_rand(void);
 

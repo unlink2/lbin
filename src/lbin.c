@@ -11,6 +11,8 @@ struct lbin_config lbin_config_defaults(void) {
   struct lbin_config cfg;
   memset(&cfg, 0, sizeof(cfg));
 
+  cfg.verbose = getenv(LBIN_VERBOSE) != NULL;
+
   char tmpnam_buf[LBIN_TMP_MAX];
 
   memset(cfg.out_path, 0, LBIN_PATH_MAX);
@@ -212,7 +214,7 @@ int lbin_main(struct lbin_config *cfg) {
   }
 
   if (cfg->put_headers) {
-    lbin_headers(ctx.out, &ctx);
+    lbin_headers(stdout, &ctx);
   }
 
   if (ctx.status == LBIN_OK) {
