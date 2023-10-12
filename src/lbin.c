@@ -206,6 +206,10 @@ int lbin_main(struct lbin_config *cfg) {
     lbin_headers(ctx.out, &ctx);
   }
 
+  if (ctx.status == LBIN_OK) {
+    lbin_pipe(ctx.out, ctx.in, cfg->echo);
+  }
+
   enum lbin_status status = ctx.status;
   lbin_ctx_free(&ctx);
   return status;
