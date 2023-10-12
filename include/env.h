@@ -8,6 +8,7 @@
 #define LBIN_ENV_OUT "LBIN_OUT"
 #define LBIN_VERBOSE "LBIN_VERBOSE"
 #define LBIN_ENV_NO_CHK_FILENAME "LBIN_NOFILENAMECHK"
+#define LBIN_ENV_MIME "LBIN_MIME"
 
 /**
  * Path separator

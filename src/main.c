@@ -13,6 +13,8 @@ struct arg_lit *no_echo = NULL;
 struct arg_lit *no_headers = NULL;
 struct arg_lit *no_filename_chk = NULL;
 
+struct arg_str *mime_type = NULL;
+
 struct arg_file *in = NULL;
 struct arg_file *out = NULL;
 struct arg_file *base_path = NULL;
@@ -23,7 +25,7 @@ struct arg_end *end = NULL;
 #define lbin_argtable                                                          \
   {                                                                            \
     help, version, verb, no_echo, no_headers, no_filename_chk, in, out,        \
-        base_path, end,                                                        \
+        base_path, mime_type, end,                                                        \
   }
 
 void lbin_args_free(void) {
@@ -42,6 +44,11 @@ void lbin_args_parse(int argc, char **argv) {
       NULL, "no-filenamechk",
       "disable filename restrictions. Warning: if used as a CGI script this "
       "may allow users to traverse the entire file system!");
+
+  mime_type =
+      arg_str0("m", "mime", "MIME_TYPE",
+               "In file's mime type (e.g. use the 'file -b --mime-type' "
+               "commad to set this value)");
 
   in = arg_file0("i", "in", "FILE", "input file");
   out = arg_file0("o", "out", "FILE", "output file");
@@ -125,6 +132,10 @@ int main(int argc, char **argv) {
 
   if (base_path->count > 0) {
     setenv(LBIN_ENV_BASE_PATH, base_path->filename[0], 1);
+  }
+
+  if (mime_type->count > 0) {
+    setenv(LBIN_ENV_MIME, mime_type->sval[0], 1);
   }
 
   // map args to cfg here

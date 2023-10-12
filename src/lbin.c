@@ -22,6 +22,8 @@ struct lbin_config lbin_config_from_env(void) {
   cfg.valid_filename_chars = LBIN_VALID_CHARS;
   cfg.valid_filename_chars_len = valid_chars_len;
 
+  cfg.mime_type = lbin_getenv_or(LBIN_ENV_MIME, "text/plain");
+
   cfg.put_headers = !getenv(LBIN_ENV_NO_HEADERS);
   cfg.check_file_name = !getenv(LBIN_ENV_NO_CHK_FILENAME);
 
@@ -170,8 +172,13 @@ void lbin_status_header(FILE *f, enum lbin_status s) {
   fputs("\n", f);
 }
 
-void lbin_headers(FILE *f, struct lbin_ctx *ctx) {
+void lbin_headers(FILE *f, struct lbin_config *cfg, struct lbin_ctx *ctx) {
   lbin_status_header(f, ctx->status);
+
+  if (ctx->status == LBIN_OK) {
+    fprintf(f, "Content-Type: %s\n", cfg->mime_type);
+  }
+
   fprintf(f, "\n");
 }
 
@@ -214,7 +221,7 @@ int lbin_main(struct lbin_config *cfg) {
   }
 
   if (cfg->put_headers) {
-    lbin_headers(stdout, &ctx);
+    lbin_headers(stdout, cfg, &ctx);
   }
 
   if (ctx.status == LBIN_OK) {

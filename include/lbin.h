@@ -25,6 +25,8 @@ struct lbin_config {
   bool put_headers;
   bool check_file_name;
 
+  const char *mime_type;
+
   // internal buffers for paths
   char base_path[LBIN_PATH_MAX];
   char out_path[LBIN_PATH_MAX];
