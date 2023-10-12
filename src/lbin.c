@@ -23,7 +23,7 @@ struct lbin_config lbin_config_defaults(void) {
   cfg.put_headers = !getenv(LBIN_ENV_NO_HEADERS);
   cfg.check_file_name = !getenv(LBIN_ENV_NO_CHK_FILENAME);
 
-  cfg.echo = getenv(LBIN_ENV_ECHO) == NULL;
+  cfg.echo = getenv(LBIN_ENV_NO_ECHO) == NULL;
 
   strncpy(cfg.in_path, lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE),
           LBIN_PATH_MAX);
@@ -58,6 +58,10 @@ struct lbin_ctx lbin_ctx_init(struct lbin_config *cfg) {
 
   ctx.in = lbin_fopen(cfg->base_path, cfg->in_path, "re", stdin);
   ctx.out = lbin_fopen(cfg->base_path, cfg->out_path, "we", stdout);
+
+  if (!ctx.out || !ctx.in) {
+    ctx.status = LBIN_BAD_REQUEST;
+  }
 
   return ctx;
 }
@@ -161,6 +165,7 @@ void lbin_status_header(FILE *f, enum lbin_status s) {
     fputs("400 Bad Request", f);
     break;
   }
+  fputs("\n", f);
 }
 
 void lbin_headers(FILE *f, struct lbin_ctx *ctx) {
@@ -179,6 +184,10 @@ int lbin_pipe(FILE *dst, FILE *src, bool echo) {
 
     if (echo && dst != stdout) {
       fwrite(buf, 1, read, stdout);
+    }
+
+    if (read != buf_len) {
+      break;
     }
   }
 
