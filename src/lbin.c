@@ -5,7 +5,7 @@
 
 const char *LBIN_VALID_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz";
 
-struct lbin_config lbin_config_defaults(void) {
+struct lbin_config lbin_config_from_env(void) {
   size_t valid_chars_len = strlen(LBIN_VALID_CHARS);
 
   struct lbin_config cfg;

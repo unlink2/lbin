@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "env.h"
 #include "lbin.h"
 #include "argtable2.h"
 
@@ -95,37 +96,39 @@ int main(int argc, char **argv) {
   }
   lbin_args_parse(argc, argv);
 
-  // map args to cfg here
-  struct lbin_config cfg = lbin_config_defaults();
-
+  /**
+   * CLI args simply override setenv
+   */
   if (verb->count > 0) {
-    cfg.verbose = verb->count > 0;
+    setenv(LBIN_VERBOSE, "1", 1);
   }
 
   if (no_echo->count > 0) {
-    cfg.echo = false;
+    setenv(LBIN_ENV_NO_ECHO, "1", 1);
   }
 
   if (no_filename_chk->count > 0) {
-    cfg.check_file_name = false;
+    setenv(LBIN_ENV_NO_CHK_FILENAME, "1", 1);
   }
 
   if (no_headers->count > 0) {
-    cfg.put_headers = false;
+    setenv(LBIN_ENV_NO_HEADERS, "1", 1);
   }
 
   if (in->count > 0) {
-    strncpy(cfg.in_path, in->filename[0], LBIN_PATH_MAX);
+    setenv(LBIN_ENV_IN, in->filename[0], 1);
   }
 
   if (out->count > 0) {
-    strncpy(cfg.out_path, out->filename[0], LBIN_PATH_MAX);
+    setenv(LBIN_ENV_OUT, out->filename[0], 1);
   }
 
   if (base_path->count > 0) {
-    strncpy(cfg.base_path, base_path->filename[0], LBIN_PATH_MAX);
+    setenv(LBIN_ENV_BASE_PATH, base_path->filename[0], 1);
   }
 
+  // map args to cfg here
+  struct lbin_config cfg = lbin_config_from_env();
   int res = lbin_main(&cfg);
 
   lbin_args_free();

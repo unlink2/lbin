@@ -47,7 +47,9 @@ struct lbin_ctx {
   FILE *out;
 };
 
-struct lbin_config lbin_config_defaults(void);
+// sets up config from env variables
+// see env.h for all possible variables
+struct lbin_config lbin_config_from_env(void);
 
 struct lbin_ctx lbin_ctx_init(struct lbin_config *cfg);
 
