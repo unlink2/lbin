@@ -10,6 +10,8 @@
 #define LBIN_TMP_MAX 16
 #define LBIN_PATH_MAX PATH_MAX
 
+#define LBIN_KEY_MAX 2048
+
 extern const char *LBIN_VALID_CHARS;
 
 struct lbin_config {
@@ -27,17 +29,19 @@ struct lbin_config {
 
   const char *mime_type;
 
+  // the requried key
+  const char *key;
+
+  // user provided key
+  const char *usr_key;
+
+  const char *base_path;
+  const char *in_path;
   // internal buffers for paths
-  char base_path[LBIN_PATH_MAX];
   char out_path[LBIN_PATH_MAX];
-  char in_path[LBIN_PATH_MAX];
 };
 
-enum lbin_status {
-  LBIN_OK,
-  LBIN_BAD_REQUEST,
-  LBIN_NOT_FOUND,
-};
+enum lbin_status { LBIN_OK, LBIN_BAD_REQUEST, LBIN_NOT_FOUND, LBIN_FORBIDDEN };
 
 struct lbin_ctx {
   enum lbin_status status;
@@ -74,6 +78,7 @@ char *lbin_join(char *dst, char path_sep, const char *suffix, size_t len);
 
 int lbin_rand(void);
 
+bool lbin_auth(const char *key, const char *usr_key);
 // pipes all data from dst to src file
 // optioanlly can echo to stdout if dst is not stdout
 int lbin_pipe(FILE *dst, FILE *src, bool echo);

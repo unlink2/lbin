@@ -50,10 +50,20 @@ void test_valid_filename(void **state) {
   assert_false(lbin_check_filename("test12.", 7, LBIN_VALID_CHARS, valid_len));
 }
 
+void test_auth(void **state) {
+  assert_true(lbin_auth(NULL, NULL));
+  assert_true(lbin_auth(NULL, ""));
+  assert_true(lbin_auth("test", "test"));
+
+  assert_false(lbin_auth("test", NULL));
+  assert_false(lbin_auth("test", "wrong"));
+}
+
 int main(int arc, char **argv) {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_lbin_join),
       cmocka_unit_test(test_valid_filename),
+      cmocka_unit_test(test_auth),
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);

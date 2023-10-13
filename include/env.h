@@ -10,6 +10,12 @@
 #define LBIN_ENV_NO_CHK_FILENAME "LBIN_NOFILENAMECHK"
 #define LBIN_ENV_MIME "LBIN_MIME"
 
+// master key
+#define LBIN_ENV_KEY "LBIN_KEY"
+
+// key provided by user
+#define LBIN_ENV_USR_KEY "LBIN_USR_KEY"
+
 /**
  * Path separator
  */

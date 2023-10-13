@@ -15,10 +15,6 @@ struct lbin_config lbin_config_from_env(void) {
 
   char tmpnam_buf[LBIN_TMP_MAX];
 
-  memset(cfg.out_path, 0, LBIN_PATH_MAX);
-  memset(cfg.in_path, 0, LBIN_PATH_MAX);
-  memset(cfg.base_path, 0, LBIN_PATH_MAX);
-
   cfg.valid_filename_chars = LBIN_VALID_CHARS;
   cfg.valid_filename_chars_len = valid_chars_len;
 
@@ -29,10 +25,14 @@ struct lbin_config lbin_config_from_env(void) {
 
   cfg.echo = getenv(LBIN_ENV_NO_ECHO) == NULL;
 
-  strncpy(cfg.in_path, lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE),
-          LBIN_PATH_MAX);
+  cfg.in_path = lbin_getenv_or(LBIN_ENV_IN, LBIN_STDFILE);
+  cfg.base_path = lbin_getenv_or(LBIN_ENV_BASE_PATH, "");
 
-  strncpy(cfg.base_path, lbin_getenv_or(LBIN_ENV_BASE_PATH, ""), LBIN_PATH_MAX);
+  // master key
+  cfg.key = getenv(LBIN_ENV_KEY);
+
+  // user provided key (e.g. over http)
+  cfg.usr_key = getenv(LBIN_ENV_USR_KEY);
 
   strncpy(
       cfg.out_path,
@@ -168,6 +168,9 @@ void lbin_status_header(FILE *f, enum lbin_status s) {
   case LBIN_BAD_REQUEST:
     fputs("400 Bad Request", f);
     break;
+  case LBIN_FORBIDDEN:
+    fputs("403 Forbidden", f);
+    break;
   }
   fputs("\n", f);
 }
@@ -205,6 +208,10 @@ int lbin_pipe(FILE *dst, FILE *src, bool echo) {
   return 0;
 }
 
+bool lbin_auth(const char *key, const char *usr_key) {
+  return key == NULL || (usr_key && strncmp(key, usr_key, LBIN_KEY_MAX) == 0);
+}
+
 int lbin_main(struct lbin_config *cfg) {
   if (lbin_pledge() == -1) {
     fprintf(stderr, "Pledge failed!\n");
@@ -215,6 +222,10 @@ int lbin_main(struct lbin_config *cfg) {
 
   if (cfg->ok == -1) {
     ctx.status = LBIN_BAD_REQUEST;
+  }
+
+  if (!lbin_auth(cfg->key, cfg->usr_key)) {
+    ctx.status = LBIN_FORBIDDEN;
   }
 
   if (cfg->verbose) {
