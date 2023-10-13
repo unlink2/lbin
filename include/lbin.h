@@ -35,6 +35,12 @@ struct lbin_config {
   // user provided key
   const char *usr_key;
 
+  // TODO: allow multiple key files
+  // username=key
+  // a user may have multiple keys.
+  // if no keyfile is provided do not use any authentication
+  // that adds username to the base path if present
+  const char *key_file;
   const char *base_path;
   const char *in_path;
   // internal buffers for paths

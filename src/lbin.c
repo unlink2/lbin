@@ -30,6 +30,7 @@ struct lbin_config lbin_config_from_env(void) {
 
   // master key
   cfg.key = getenv(LBIN_ENV_KEY);
+  cfg.key_file = getenv(LBIN_ENV_KEY_FILE);
 
   // user provided key (e.g. over http)
   cfg.usr_key = getenv(LBIN_ENV_USR_KEY);
@@ -229,8 +230,8 @@ int lbin_main(struct lbin_config *cfg) {
   }
 
   if (cfg->verbose) {
-    fprintf(stderr, "base path: '%s'; in: '%s'; out: '%s';\n", cfg->base_path,
-            cfg->in_path, cfg->out_path);
+    fprintf(stderr, "base path: '%s'; in: '%s'; out: '%s'; keyfile: %s;\n", cfg->base_path,
+            cfg->in_path, cfg->out_path, cfg->key_file);
   }
 
   if (cfg->put_headers) {
